@@ -1,0 +1,53 @@
+{
+  "name": "ai-writer",
+  "version": "1.0.0",
+  "description": "AI Powered Survey Assistant",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "concurrently \"cd frontend && npm run dev\" \"wait-on http://localhost:5173 && electron main.js\"",
+    "build:frontend": "cd frontend && npm install && npm run build",
+    "dist:mac": "npm run build:frontend && electron-builder --mac",
+    "dist:win": "npm run build:frontend && electron-builder --win"
+  },
+  "build": {
+    "appId": "com.amir.aiwriter",
+    "productName": "AI Writer Tool",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "main.js",
+      "package.json",
+      "frontend/dist/**/*",
+      "node_modules/**/*"
+    ],
+    "mac": {
+      "target": "dmg",
+      "icon": "build/icon.icns"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "keywords": [],
+  "author": "Amir",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@openrouter/sdk": "^0.2.9",
+    "openai": "^6.10.0",
+    "tesseract.js": "^6.0.1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "electron": "^39.2.6",
+    "electron-builder": "^26.0.12",
+    "wait-on": "^9.0.3"
+  }
+}
