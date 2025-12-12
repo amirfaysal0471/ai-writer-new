@@ -15,7 +15,7 @@ const path = require("path");
 const os = require("os");
 
 const OPENROUTER_API_KEY =
-  "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";
+  "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";
 
 const openai = new OpenAI({
   baseURL: "https://openrouter.ai/api/v1",
