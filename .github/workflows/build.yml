@@ -3,9 +3,10 @@ name: Build and Publish Electron App
 on:
   push:
     branches: [main]
-    # ১. শুধুমাত্র ভার্সন ট্যাগ (v1.0.1) পুশ করলেই বিল্ড হবে (Optional but Recommended)
-    # tags:
-    #   - 'v*'
+
+# 🔥 ফিক্স: রিলিজ তৈরি করার জন্য এই পারমিশনটি জরুরি
+permissions:
+  contents: write
 
 jobs:
   build-and-publish:
@@ -36,14 +37,15 @@ jobs:
           npm run build
           cd ..
 
-      # ২. Windows এর জন্য বিল্ড এবং পাবলিশ (Release তৈরি করবে)
+      # Windows Build & Publish
       - name: Publish Windows App
         if: matrix.os == 'windows-latest'
         env:
+          # GitHub অটোমেটিক এই টোকেন জেনারেট করে, আলাদা সেট করার দরকার নেই
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run build:frontend && npx electron-builder --win --publish always
 
-      # ৩. Mac এর জন্য বিল্ড এবং পাবলিশ
+      # Mac Build & Publish
       - name: Publish Mac App
         if: matrix.os == 'macos-latest'
         env:
