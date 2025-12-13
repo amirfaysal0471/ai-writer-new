@@ -16,6 +16,14 @@
     "directories": {
       "output": "release"
     },
+    "protocols": [
+      {
+        "name": "AI Writer Auth",
+        "schemes": [
+          "ai-writer"
+        ]
+      }
+    ],
     "files": [
       "main.js",
       "package.json",
@@ -24,7 +32,9 @@
     ],
     "mac": {
       "target": "dmg",
-      "icon": "build/icon.icns"
+      "icon": "build/icon.icns",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false
     },
     "win": {
       "target": "nsis",
