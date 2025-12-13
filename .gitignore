@@ -16,3 +16,9 @@ Thumbs.db
 *.traineddata
 *.zip
 *.tar
+release/
+dist/
+build/
+*.dmg
+*.app
+*.asar
