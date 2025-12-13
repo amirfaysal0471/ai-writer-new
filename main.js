@@ -14,10 +14,31 @@ const Tesseract = require("tesseract.js");
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
+const { autoUpdater } = require("electron-updater");
+const log = require("electron-log");
 
 let mainWindow;
 
-// ✅ ১. প্রোটোকল সেটআপ (Deep Linking)
+autoUpdater.logger = log;
+autoUpdater.logger.transports.file.level = "info";
+
+function setupAutoUpdater() {
+  autoUpdater.checkForUpdatesAndNotify();
+  autoUpdater.on("update-downloaded", (info) => {
+    dialog
+      .showMessageBox({
+        type: "info",
+        title: "Update Ready",
+        message:
+          "A new version has been downloaded. Restart the application to apply the updates.",
+        buttons: ["Restart", "Later"],
+      })
+      .then((returnValue) => {
+        if (returnValue.response === 0) autoUpdater.quitAndInstall();
+      });
+  });
+}
+
 if (process.defaultApp) {
   if (process.argv.length >= 2) {
     app.setAsDefaultProtocolClient("ai-writer", process.execPath, [
@@ -28,32 +49,24 @@ if (process.defaultApp) {
   app.setAsDefaultProtocolClient("ai-writer");
 }
 
-// ✅ ২. সিঙ্গেল ইনস্ট্যান্স লক (সবচেয়ে গুরুত্বপূর্ণ ফিক্স)
 const gotTheLock = app.requestSingleInstanceLock();
 
 if (!gotTheLock) {
-  // যদি অন্য একটি অ্যাপ অলরেডি খোলা থাকে, তবে এই নতুনটি বন্ধ করে দাও
   app.quit();
 } else {
-  // যদি এটিই মেইন অ্যাপ হয়, তবে 'second-instance' ইভেন্ট শুনো
   app.on("second-instance", (event, commandLine, workingDirectory) => {
-    // কেউ যদি অ্যাপ চালু থাকা অবস্থায় আবার খুলতে চায় (Deep Link দিয়ে)
     if (mainWindow) {
       if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.show();
       mainWindow.focus();
     }
-
-    // Windows/Linux এর জন্য লিংক বের করা
     const url = commandLine.find((arg) => arg.startsWith("ai-writer://"));
     if (url) handleDeepLink(url);
   });
 
-  // অ্যাপ রেডি হলে উইন্ডো তৈরি করো
   app.whenReady().then(() => {
     createWindow();
 
-    // Global Shortcut
     globalShortcut.register("Option+Space", () => {
       if (mainWindow.isVisible()) {
         mainWindow.isFocused() ? mainWindow.hide() : mainWindow.focus();
@@ -62,10 +75,13 @@ if (!gotTheLock) {
         mainWindow.focus();
       }
     });
+
+    if (app.isPackaged) {
+      setupAutoUpdater();
+    }
   });
 }
 
-// ✅ ৩. উইন্ডো তৈরি ফাংশন
 function createWindow() {
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width, height } = primaryDisplay.workAreaSize;
@@ -91,7 +107,6 @@ function createWindow() {
 
   mainWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
 
-  // External Link Handler
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith("http:") || url.startsWith("https:")) {
       shell.openExternal(url);
@@ -100,7 +115,6 @@ function createWindow() {
     return { action: "allow" };
   });
 
-  // Load App
   if (app.isPackaged) {
     mainWindow.loadFile(path.join(__dirname, "frontend/dist/index.html"));
   } else {
@@ -108,46 +122,46 @@ function createWindow() {
   }
 }
 
-// ✅ ৪. Deep Link প্রসেসিং এবং টোকেন হ্যান্ডলার
 function handleDeepLink(url) {
   try {
     const urlObj = new URL(url);
     const token = urlObj.searchParams.get("token");
 
     if (token && mainWindow) {
-      console.log("🔥 Token Received:", token);
-
-      // ফ্রন্টএন্ডে টোকেন পাঠানো
       mainWindow.webContents.send("auth-token", token);
-
-      // উইন্ডো সামনে আনা
       if (mainWindow.isMinimized()) mainWindow.restore();
       mainWindow.show();
       mainWindow.focus();
     }
   } catch (error) {
-    console.error("Deep Link Error:", error);
+    console.error(error);
   }
 }
 
-// ✅ ৫. Mac OS এর জন্য আলাদা হ্যান্ডলার
 app.on("open-url", (event, url) => {
   event.preventDefault();
   handleDeepLink(url);
 });
 
-// ✅ ৬. IPC হ্যান্ডলারস
-ipcMain.on("minimize-app", () => mainWindow.minimize());
-ipcMain.on("close-app", () => {
-  mainWindow.hide();
-  app.hide();
+ipcMain.on("minimize-app", () => {
+  if (mainWindow) mainWindow.minimize();
 });
+
+ipcMain.on("close-app", () => {
+  if (mainWindow) {
+    mainWindow.hide();
+  }
+  if (process.platform === "darwin") {
+    app.hide();
+  }
+});
+
 ipcMain.on("open-browser", (event, url) => {
   shell.openExternal(url);
 });
+
 ipcMain.handle("get-clipboard-text", async () => clipboard.readText());
 
-// OCR Logic
 ipcMain.handle("scan-screen-ocr", async () => {
   const windowBounds = mainWindow.getBounds();
   const currentDisplay = screen.getDisplayMatching(windowBounds);
