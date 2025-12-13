@@ -1,6 +1,6 @@
 {
-  "name": "ai-writer",
-  "version": "1.0.2",
+  "name": "servey-boss-ai",
+  "version": "1.0.3",
   "description": "AI Powered Survey Assistant",
   "main": "main.js",
   "repository": {
@@ -17,7 +17,7 @@
   },
   "build": {
     "appId": "com.amir.aiwriter",
-    "productName": "AI Writer Tool",
+    "productName": "Servey Boss AI",
     "directories": {
       "output": "release"
     },
