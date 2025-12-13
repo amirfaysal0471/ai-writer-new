@@ -22,3 +22,4 @@ build/
 *.dmg
 *.app
 *.asar
+config.bat
