@@ -1,12 +1,14 @@
-name: Build Electron App
+name: Build and Publish Electron App
 
 on:
   push:
-    branches: [main, master]
-  workflow_dispatch:
+    branches: [main]
+    # ১. শুধুমাত্র ভার্সন ট্যাগ (v1.0.1) পুশ করলেই বিল্ড হবে (Optional but Recommended)
+    # tags:
+    #   - 'v*'
 
 jobs:
-  build:
+  build-and-publish:
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -34,23 +36,16 @@ jobs:
           npm run build
           cd ..
 
-      # Build Electron App (Windows)
-      - name: Build Windows App
+      # ২. Windows এর জন্য বিল্ড এবং পাবলিশ (Release তৈরি করবে)
+      - name: Publish Windows App
         if: matrix.os == 'windows-latest'
-        run: npm run dist:win
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run build:frontend && npx electron-builder --win --publish always
 
-      # Build Electron App (Mac)
-      - name: Build Mac App
+      # ৩. Mac এর জন্য বিল্ড এবং পাবলিশ
+      - name: Publish Mac App
         if: matrix.os == 'macos-latest'
-        run: npm run dist:mac
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # Upload Artifacts (Downloadable Files)
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-${{ matrix.os }}
-          path: release/
+        run: npm run build:frontend && npx electron-builder --mac --publish always
