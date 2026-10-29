@@ -9,8 +9,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "concurrently \"cd frontend && npm run dev\" \"wait-on http://localhost:5173 && electron main.js\"",
-    "build:frontend": "cd frontend && npm install && npm run build",
+    "start": "node init && concurrently \"cd frontend && npm run dev\" \"wait-on http://localhost:5173 && electron main.js\"",
+    "build:frontend": "node init && cd frontend && npm install && npm run build",
     "dist:mac": "npm run build:frontend && electron-builder --mac",
     "dist:win": "npm run build:frontend && electron-builder --win",
     "publish": "npm run build:frontend && electron-builder --win --publish always"
